@@ -6,8 +6,9 @@ id: wildfly-cluster
 globals:
   workerUser: worker
   workerPswd: ${fn.password}
+  path: /opt/wildfly/ssl/admin
 
-baseUrl: https://raw.githubusercontent.com/jelastic-jps/wildfly/master/addons/auto-clustering
+baseUrl: https://raw.githubusercontent.com/SiryjVyiko/wildfly/master/addons/auto-clustering
 
 nodeGroupAlias:
   ${targetNodes.nodeGroup}: cp
@@ -94,6 +95,16 @@ actions:
   saveDatasources:
     cmd[${nodes.cp.master.id}]: sudo saveDatasources;
 
+  mountSSLDirectory:
+    api: env.file.AddMountPointByGroup
+    nodeGroup: cp
+    path: "${globals.path}"
+    protocol: nfs
+    sourcePath: "${globals.path}"
+    sourceNodeId: "${nodes.ctrl.master.id}"
+    name: Internal admin certificates
+    readOnly: true
+
   buildCluster:
   #for 5.4+
   - if (!'${:}'):
@@ -142,6 +153,7 @@ actions:
         nodeGroup: ${targetNodes.nodeGroup}
 
   setupCtrl:
+  - mountSSLDirectory
   - addWokerUser:
     ctrlNodeId: ${nodes.ctrl.master.id}
   - linkLayers:
